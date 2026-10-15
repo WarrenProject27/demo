@@ -1,0 +1,26 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Maven: JavaFX run",
+      "type": "process",
+      "command": "C:\\Users\\Warren\\Documents\\apache-maven\\bin\\mvn.cmd",
+      "args": [
+        "javafx:run"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/demo"
+      },
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
+    }
+  ]
+}

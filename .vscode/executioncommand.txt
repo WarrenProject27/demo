@@ -1,0 +1,7 @@
+cd C:\Users\Warren\JavaVSCode\demo 
+mvn javafx:run
+
+& "C:\Users\Warren\Documents\apache-maven\bin\mvn.cmd" javafx:run
+
+Docente: usuario juan, contraseña docente123
+Administrador: usuario admin, contraseña admin123
