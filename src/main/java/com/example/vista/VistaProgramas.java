@@ -1,12 +1,17 @@
-package com.example;
+package com.example.vista;
+
+import com.example.logica.Funciones;
+import com.example.modelo.Programa;
 
 import java.io.File;
+import java.sql.SQLException;
 import java.util.function.Function;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Insets;
@@ -29,9 +34,11 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.layout.GridPane;
 
-public class ProgramasView {
+public class VistaProgramas {
 
     public VBox crearPanel(boolean permitirEdicion, String nombreDocente) {
+        Funciones funciones = new Funciones();
+
         // Controles para buscar programas por asignatura, grado y nivel.
         Label titulo = new Label("Programas curriculares");
         titulo.setId("tituloGestion");
@@ -71,16 +78,12 @@ public class ProgramasView {
         barraBusqueda.setAlignment(Pos.BOTTOM_LEFT);
         HBox.setHgrow(filtros, Priority.ALWAYS);
 
-        // Datos de ejemplo; FilteredList permite filtrar sin modificar la lista original.
-        // Observable list con datos estaticos sin cargar de la base de datos
-        ObservableList<Programa> programas = FXCollections.observableArrayList(
-            new Programa("Matemática", "1°", "EBI (Ciclo Básico)", "Docente", null),
-            new Programa("---", "---", "---", "---", null),
-            new Programa("---", "---", "---", "---", null),
-            new Programa("---", "---", "---", "---", null),
-            new Programa("Informática", "1°", "Bachillerato", "Docente", null),
-            new Programa("Biología", "3°", "Bachillerato", "Docente", null)
-        );
+        ObservableList<Programa> programas = FXCollections.observableArrayList();
+        try {
+            programas.addAll(funciones.obtenerProgramas());
+        } catch (SQLException error) {
+            mostrarError("cargar los programas", error);
+        }
 
         nuevo.setOnAction(e -> {
             Dialog<Programa> dialogo = new Dialog<>();
@@ -109,9 +112,11 @@ public class ProgramasView {
 
             //bloque de validar que los campos esten completos.----------------------
             Runnable validarFormulario = () -> botonGuardar.setDisable(
-            asignaturaNueva.getText().trim().isEmpty() 
-            || gradoNuevo.getValue() == null //comprobamos el valor nulo. si esta vacio.
-            || nivelNuevo.getValue() == null
+                !funciones.datosValidos(
+                    asignaturaNueva.getText(),
+                    gradoNuevo.getValue(),
+                    nivelNuevo.getValue()
+                )
             );
 
             asignaturaNueva.textProperty().addListener(
@@ -161,7 +166,7 @@ public class ProgramasView {
 
             dialogo.setResultConverter(boton -> {
                 if (boton == guardar) {
-                    return new Programa(
+                    return funciones.crearPrograma(
                         asignaturaNueva.getText().trim(),
                         gradoNuevo.getValue(),
                         nivelNuevo.getValue(),
@@ -172,13 +177,25 @@ public class ProgramasView {
                 return null;
             });
 
-            dialogo.showAndWait().ifPresent(programas::add);
+            dialogo.showAndWait().ifPresent(programa -> {
+                try {
+                    programas.add(funciones.agregarPrograma(programa));
+                } catch (SQLException error) {
+                    mostrarError("guardar el programa", error);
+                }
+            });
         });
 
         FilteredList<Programa> programasFiltrados = new FilteredList<>(programas, programa -> true);
 
         TableView<Programa> tablaProgramas = new TableView<>(programasFiltrados);
         tablaProgramas.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        Label cantidad = new Label();
+        programas.addListener((ListChangeListener<Programa>) cambio ->
+            cantidad.setText(
+                programasFiltrados.size() + " programa(s) encontrados."
+            )
+        );
         // Las columnas muestran los datos del programa mediante sus accesores.
         tablaProgramas.getColumns().addAll(
             columnaPrograma("Asignatura", Programa::asignatura),
@@ -187,8 +204,6 @@ public class ProgramasView {
             columnaPrograma("Docente", Programa::docente)
         );
 
-        Label cantidad = new Label();
-        
         TableColumn<Programa, Void> columnaAcciones = new TableColumn<>("Acciones");
         columnaAcciones.setCellFactory(columna -> new TableCell<>() {
             private final Button ver = new Button("Ver");
@@ -301,9 +316,11 @@ public class ProgramasView {
                     Button botonGuardarEdicion = (Button) dialogo.getDialogPane()
                         .lookupButton(guardarEdicion);
                     Runnable validarEdicion = () -> botonGuardarEdicion.setDisable(
-                        asignaturaEditada.getText().trim().isEmpty()
-                            || gradoEditado.getValue() == null
-                            || nivelEditado.getValue() == null
+                        !funciones.datosValidos(
+                            asignaturaEditada.getText(),
+                            gradoEditado.getValue(),
+                            nivelEditado.getValue()
+                        )
                     );
                     asignaturaEditada.textProperty().addListener(
                         (observable, anterior, actual) -> validarEdicion.run()
@@ -318,11 +335,11 @@ public class ProgramasView {
 
                     dialogo.setResultConverter(boton -> {
                         if (boton == guardarEdicion) {
-                            return new Programa(
+                            return funciones.editarPrograma(
+                                original,
                                 asignaturaEditada.getText().trim(),
                                 gradoEditado.getValue(),
                                 nivelEditado.getValue(),
-                                original.docente(),
                                 pdfEditado.get()
                             );
                         }
@@ -330,9 +347,17 @@ public class ProgramasView {
                     });
 
                     dialogo.showAndWait().ifPresent(programaEditado -> {
-                        int indice = programas.indexOf(original);
-                        if (indice >= 0) {
+                        try {
+                            funciones.actualizarPrograma(programaEditado);
+                            int indice = programas.indexOf(original);
+                            if (indice < 0) {
+                                throw new IllegalStateException(
+                                    "El programa actualizado ya no está en la lista."
+                                );
+                            }
                             programas.set(indice, programaEditado);
+                        } catch (SQLException | IllegalStateException error) {
+                            mostrarError("actualizar el programa", error);
                         }
                     });
                 });
@@ -350,10 +375,20 @@ public class ProgramasView {
 
                     if (confirmacion.showAndWait().orElse(ButtonType.CANCEL)
                             == ButtonType.OK) {
-                        programas.remove(programa);
-                        cantidad.setText(
-                            programasFiltrados.size() + " programa(s) encontrados."
-                        );
+                        try {
+                            if (funciones.eliminarPrograma(programa)) {
+                                programas.remove(programa);
+                            } else {
+                                mostrarError(
+                                    "eliminar el programa",
+                                    new SQLException(
+                                        "No se encontró el programa en la base de datos."
+                                    )
+                                );
+                            }
+                        } catch (SQLException error) {
+                            mostrarError("eliminar el programa", error);
+                        }
                     }
                 });
             }
@@ -371,13 +406,15 @@ public class ProgramasView {
         // Aplica conjuntamente los criterios elegidos y actualiza el total de resultados.
 
         Runnable aplicarFiltros = () -> {
-            String texto = asignatura.getText().trim().toLowerCase();
             String gradoSeleccionado = grado.getValue();
             String nivelSeleccionado = nivel.getValue();
             programasFiltrados.setPredicate(programa ->
-                (texto.isEmpty() || programa.asignatura().toLowerCase().contains(texto)) &&
-                ("Todos".equals(gradoSeleccionado) || programa.grado().equals(gradoSeleccionado)) &&
-                ("Todos".equals(nivelSeleccionado) || programa.nivel().equals(nivelSeleccionado))
+                funciones.coincideConFiltros(
+                    programa,
+                    asignatura.getText(),
+                    gradoSeleccionado,
+                    nivelSeleccionado
+                )
             );
             cantidad.setText(programasFiltrados.size() + " programa(s) encontrados.");
         };
@@ -417,9 +454,12 @@ public class ProgramasView {
         return campo;
     }
 
-    // Agrupa los datos mostrados en cada fila de la tabla de programas.
-    private record Programa(
-        String asignatura, String grado, String nivel, String docente, File archivoPdf
-    ) {
+    private void mostrarError(String operacion, Exception error) {
+        Alert alerta = new Alert(Alert.AlertType.ERROR);
+        alerta.setTitle("Error de base de datos");
+        alerta.setHeaderText("No se pudo " + operacion + ".");
+        alerta.setContentText(error.getMessage());
+        alerta.showAndWait();
     }
+
 }

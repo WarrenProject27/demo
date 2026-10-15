@@ -21,6 +21,11 @@
             <artifactId>javafx-controls</artifactId>
             <version>${javafx.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>9.7.0</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -39,7 +44,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>com.example.ventana</mainClass>
+                    <mainClass>com.example.vista.VentanaLogin</mainClass>
                 </configuration>
             </plugin>
         </plugins>

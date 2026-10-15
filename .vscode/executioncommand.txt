@@ -3,5 +3,8 @@ mvn javafx:run
 
 & "C:\Users\Warren\Documents\apache-maven\bin\mvn.cmd" javafx:run
 
-Docente: usuario juan, contraseña docente123
-Administrador: usuario admin, contraseña admin123
+Administrador: admin / admin123
+Docente: docente / docente123
+Estudiante: estudiante / estudiante123
+
+http://localhost/phpmyadmin/

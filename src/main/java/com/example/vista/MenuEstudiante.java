@@ -1,4 +1,6 @@
-package com.example;
+package com.example.vista;
+
+import com.example.modelo.Usuario;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -17,14 +19,14 @@ public class MenuEstudiante {
         Label marca = new Label("PRISMA");
         marca.setId("marca");
 
-        ImageView logo = new ventana().crearLogo();
+        ImageView logo = new VentanaLogin().crearLogo();
 
         Button btnProgramas = new Button("Programas");
         btnProgramas.getStyleClass().addAll("nav-button", "selected");
 
         Button btnCerrarSesion = new Button("Cerrar sesión");
         btnCerrarSesion.setId("btnSesion");
-        btnCerrarSesion.setOnAction(e -> new ventana().start(stage));
+        btnCerrarSesion.setOnAction(e -> new VentanaLogin().start(stage));
 
         VBox menuLateral = new VBox(
             15, marca, logo, btnProgramas, btnCerrarSesion
@@ -37,7 +39,7 @@ public class MenuEstudiante {
         sesion.setId("panelSesion");
 
         VBox vistaProgramas =
-            new ProgramasView().crearPanel(false, usuario.getNombre());
+            new VistaProgramas().crearPanel(false, usuario.getNombre());
         vistaProgramas.setId("segundoPanel");
         VBox.setVgrow(vistaProgramas, Priority.ALWAYS);
 
@@ -49,7 +51,7 @@ public class MenuEstudiante {
 
         Scene escena = new Scene(raiz, 800, 600);
         escena.getStylesheets().add(
-            getClass().getResource("estilosGestion.css").toExternalForm()
+            getClass().getResource("/com/example/estilosGestion.css").toExternalForm()
         );
         return escena;
     }

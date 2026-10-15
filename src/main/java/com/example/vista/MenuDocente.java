@@ -1,4 +1,6 @@
-package com.example;
+package com.example.vista;
+
+import com.example.modelo.Usuario;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -17,7 +19,7 @@ public class MenuDocente {
         Label marca = new Label("PRISMA");
         marca.setId("marca");
 
-        ImageView logo = new ventana().crearLogo();
+        ImageView logo = new VentanaLogin().crearLogo();
 
         Button btnProgramas = crearBoton("Programas");
         Button btnIA = crearBoton("Asistente de IA");
@@ -34,7 +36,7 @@ public class MenuDocente {
         Label sesion = new Label("Sesión: " + usuario.getNombre());
         sesion.setId("panelSesion");
 
-        VBox vistaProgramas = new ProgramasView().crearPanel(true, usuario.getNombre()); //este true indica que permite mostrar editar y eliminar
+        VBox vistaProgramas = new VistaProgramas().crearPanel(true, usuario.getNombre()); //este true indica que permite mostrar editar y eliminar
         vistaProgramas.setId("segundoPanel");
         VBox vistaIA = crearVista("Asistente de IA",
             "Aquí irá el asistente de IA.");
@@ -49,7 +51,7 @@ public class MenuDocente {
         btnIA.setOnAction(e ->
             mostrar(contenido, vistaIA, btnProgramas, btnIA));
 
-        btnCerrarSesion.setOnAction(e -> new ventana().start(stage));
+        btnCerrarSesion.setOnAction(e -> new VentanaLogin().start(stage));
 
         btnProgramas.getStyleClass().add("selected");
 
@@ -58,7 +60,7 @@ public class MenuDocente {
 
         Scene escena = new Scene(raiz, 800, 600);
         escena.getStylesheets().add(
-            getClass().getResource("estilosGestion.css").toExternalForm()
+            getClass().getResource("/com/example/estilosGestion.css").toExternalForm()
         );
         return escena;
     }
