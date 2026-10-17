@@ -22,12 +22,11 @@ public class MenuDocente {
         ImageView logo = new VentanaLogin().crearLogo();
 
         Button btnProgramas = crearBoton("Programas");
-        Button btnIA = crearBoton("Asistente de IA");
         Button btnCerrarSesion = new Button("Cerrar sesión");
         btnCerrarSesion.setId("btnSesion");
 
         VBox menuLateral = new VBox(
-            15, marca, logo, btnProgramas, btnIA, btnCerrarSesion
+            15, marca, logo, btnProgramas, btnCerrarSesion
         );
         menuLateral.setAlignment(Pos.TOP_CENTER);
         menuLateral.setId("panelGestion");
@@ -38,18 +37,10 @@ public class MenuDocente {
 
         VBox vistaProgramas = new VistaProgramas().crearPanel(true, usuario.getNombre()); //este true indica que permite mostrar editar y eliminar
         vistaProgramas.setId("segundoPanel");
-        VBox vistaIA = crearVista("Asistente de IA",
-            "Aquí irá el asistente de IA.");
 
         VBox contenido = new VBox(15, sesion, vistaProgramas);
         VBox.setVgrow(vistaProgramas, Priority.ALWAYS);
         HBox.setHgrow(contenido, Priority.ALWAYS);
-
-        btnProgramas.setOnAction(e ->
-            mostrar(contenido, vistaProgramas, btnProgramas, btnIA));
-
-        btnIA.setOnAction(e ->
-            mostrar(contenido, vistaIA, btnProgramas, btnIA));
 
         btnCerrarSesion.setOnAction(e -> new VentanaLogin().start(stage));
 
@@ -69,25 +60,5 @@ public class MenuDocente {
         Button boton = new Button(texto);
         boton.getStyleClass().add("nav-button");
         return boton;
-    }
-
-    private VBox crearVista(String titulo, String descripcion) {
-        Label encabezado = new Label(titulo);
-        Label detalle = new Label(descripcion);
-
-        VBox vista = new VBox(15, encabezado, detalle);
-        vista.setId("segundoPanel");
-        VBox.setVgrow(vista, Priority.ALWAYS);
-        return vista;
-    }
-
-    private void mostrar(VBox contenido, VBox vista, Button botonActivo,
-                         Button... botonesNavegacion) {
-        contenido.getChildren().set(1, vista);
-
-        for (Button boton : botonesNavegacion) {
-            boton.getStyleClass().remove("selected");
-        }
-        botonActivo.getStyleClass().add("selected");
     }
 }

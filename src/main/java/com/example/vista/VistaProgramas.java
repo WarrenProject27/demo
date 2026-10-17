@@ -3,7 +3,9 @@ package com.example.vista;
 import com.example.logica.Funciones;
 import com.example.modelo.Programa;
 
+import java.awt.Desktop;
 import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.function.Function;
 
@@ -236,7 +238,19 @@ public class VistaProgramas {
                             ? "Sin PDF adjunto"
                             : "PDF adjunto: " + programa.archivoPdf().getName())
                     );
-                    detalle.showAndWait();
+                    if (programa.archivoPdf() == null) {
+                        detalle.showAndWait();
+                    } else {
+                        ButtonType abrirPdf = new ButtonType(
+                            "Abrir PDF", ButtonBar.ButtonData.OTHER
+                        );
+                        detalle.getButtonTypes().setAll(abrirPdf, ButtonType.CLOSE);
+                        detalle.showAndWait().ifPresent(respuesta -> {
+                            if (respuesta == abrirPdf) {
+                                abrirPdf(programa.archivoPdf());
+                            }
+                        });
+                    }
                 });
 
                 editar.setOnAction(e -> {
@@ -459,6 +473,33 @@ public class VistaProgramas {
         alerta.setTitle("Error de base de datos");
         alerta.setHeaderText("No se pudo " + operacion + ".");
         alerta.setContentText(error.getMessage());
+        alerta.showAndWait();
+    }
+
+    private void abrirPdf(File archivoPdf) {
+        if (!Desktop.isDesktopSupported()
+                || !Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+            mostrarErrorPdf(
+                "Este equipo no permite abrir enlaces en el navegador predeterminado."
+            );
+            return;
+        }
+        if (!archivoPdf.isFile()) {
+            mostrarErrorPdf("No se encontró el archivo PDF adjunto.");
+            return;
+        }
+        try {
+            Desktop.getDesktop().browse(archivoPdf.toURI());
+        } catch (IOException | UnsupportedOperationException | SecurityException error) {
+            mostrarErrorPdf("No se pudo abrir el PDF: " + error.getMessage());
+        }
+    }
+
+    private void mostrarErrorPdf(String mensaje) {
+        Alert alerta = new Alert(Alert.AlertType.ERROR);
+        alerta.setTitle("No se pudo abrir el PDF");
+        alerta.setHeaderText("Error al abrir el archivo adjunto.");
+        alerta.setContentText(mensaje);
         alerta.showAndWait();
     }
 

@@ -8,3 +8,5 @@ Docente: docente / docente123
 Estudiante: estudiante / estudiante123
 
 http://localhost/phpmyadmin/
+
+& "C:\Users\Warren\Documents\apache-maven\bin\mvn.cmd" -f "C:\Users\Warren\JavaVSCode\demo\pom.xml" javafx:run
